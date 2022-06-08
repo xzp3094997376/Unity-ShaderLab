@@ -2,22 +2,24 @@
 
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
-Shader "Test/AlphaTest"
+Shader "Test/AlphaBlend"
 {
     Properties
     {
         _Color ("Main Tint",Color)=(1,1,1,1)
-        _MainTex ("Texture", 2D) = "white" {}
-        _Cutoff ("Alpha Cutoff",Range(0,1))=0.5
+        _MainTex ("Main Tex", 2D) = "white" {}
+        _AlphaScale ("Alpha Cutoff",Range(0,1))=1
     }
     SubShader
     {
-        Tags {"Queue"="AlphaTest" "RenderType"="TransparentCutout" "IgnoreProjector"="True" }
+        Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
         LOD 100
-        //Cull Off
+      
         Pass
         {
-            Tags {"LightMode"="ForwardBase" }           
+            Tags {"LightMode"="ForwardBase" }
+            ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag           
@@ -45,7 +47,7 @@ Shader "Test/AlphaTest"
             fixed4 _Color;        
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            fixed _Cutoff;
+            fixed _AlphaScale;
 
             v2f vert(appdata v)
             {
@@ -61,16 +63,15 @@ Shader "Test/AlphaTest"
             {
                 fixed3 worldNormal=normalize(i.worldNormal);
                 fixed3 worldLightDir=normalize(UnityWorldSpaceLightDir(i.worldPos));           
-                fixed4 texColor=tex2D(_MainTex,i.uv);  
-                clip(texColor.a-_Cutoff);
+                fixed4 texColor=tex2D(_MainTex,i.uv);                 
                 fixed3 albedo=texColor.rgb*_Color.rgb;
                 fixed3 ambient=UNITY_LIGHTMODEL_AMBIENT.xyz*albedo;
                 fixed3 diffuse=_LightColor0.rgb*albedo*max(0,dot(worldNormal,worldLightDir));
 
-                return fixed4(ambient+diffuse,1.0);
+                return fixed4(ambient+diffuse,texColor.a*_AlphaScale);
             }
             ENDCG
         }
     }
-    Fallback "Transparent/Cutout/VertexLit"
+    Fallback "Transparent/VertexLit"
 }

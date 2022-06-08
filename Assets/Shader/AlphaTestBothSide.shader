@@ -2,7 +2,7 @@
 
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
-Shader "Test/AlphaTest"
+Shader "Test/AlphaTestBothSide"
 {
     Properties
     {
@@ -14,7 +14,7 @@ Shader "Test/AlphaTest"
     {
         Tags {"Queue"="AlphaTest" "RenderType"="TransparentCutout" "IgnoreProjector"="True" }
         LOD 100
-        //Cull Off
+        Cull Off
         Pass
         {
             Tags {"LightMode"="ForwardBase" }           
