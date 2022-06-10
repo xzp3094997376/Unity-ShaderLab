@@ -2,7 +2,7 @@
 
 // Upgrade NOTE: replaced '_LightMatrix0' with 'unity_WorldToLight'
 
-Shader "Test/ForwardRendering"
+Shader "Test/Shadow"
 {
       Properties
     {
@@ -25,7 +25,7 @@ Shader "Test/ForwardRendering"
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
             #include "AutoLight.cginc"
-              struct appdata
+            struct appdata
             {
                 float4 vertex:POSITION;
                 float3 normal:NORMAL;
@@ -37,21 +37,23 @@ Shader "Test/ForwardRendering"
                 float4 pos:SV_POSITION;
                 float3 worldNormal:TEXCOORD0;
                 float3 worldPos:TEXCOORD1;
-                float2 uv:TEXCOORD2;                              
+                float2 uv:TEXCOORD2;  
+                SHADOW_COORDS(3)                                                        
             };
 
             fixed4 _Color;        
             sampler2D _MainTex;
-            float4 _MainTex_ST;
+            float4 _MainTex_ST;//
         
 
             v2f vert (appdata v)
             {
-                 v2f o;
+                v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.worldNormal=UnityObjectToWorldNormal(v.normal);
                 o.worldPos=mul(unity_ObjectToWorld,v.vertex).xyz;
-                o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);           
+                o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);       
+                TRANSFER_SHADOW(o);
                 return o;
             }
 
@@ -65,8 +67,9 @@ Shader "Test/ForwardRendering"
                 fixed3 albedo=texColor.rgb*_Color.rgb;
                 fixed3 ambient=UNITY_LIGHTMODEL_AMBIENT.xyz*albedo;
                 fixed3 diffuse=_LightColor0.rgb*albedo*max(0,dot(worldNormal,worldLightDir));
-
-                return fixed4(ambient+diffuse,1.0);
+                fixed shadow=SHADOW_ATTENUATION(i); 
+                               
+                return fixed4(ambient+diffuse*shadow,1.0);
             }
             ENDCG
         }
@@ -139,5 +142,5 @@ Shader "Test/ForwardRendering"
             ENDCG
         }
     }
-    Fallback "Specular"
+    //Fallback "Specular"
 }
