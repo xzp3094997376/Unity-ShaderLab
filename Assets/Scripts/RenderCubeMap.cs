@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Diagnostics;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -18,8 +19,7 @@ public class RenderCubeMap:MonoBehaviour
     {
         //create temporary camera for rendering
         GameObject go = new GameObject("CubemapCamera");
-        go.AddComponent<Camera>();
-
+        go.AddComponent<Camera>();            
         //place it on the object 
         go.transform.position = renderFromPosition.position;
 

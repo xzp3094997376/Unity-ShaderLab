@@ -1,20 +1,19 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-Shader "Test/Reflection"
+﻿Shader "Test/Refraction"
 {
     Properties
-    {       
+    {
         _Color("Color Tint",Color)=(1,1,1,1)
-        _ReflectColor("Reflection Color",Color)=(1,1,1,1)
-        _ReflectAmount("Reflect Amount",Range(0,1))=1
-        _CubeMap ("Reflection CubeMap", Cube) = "_Skybox" {}
+        _RefractColor("refraction Color",Color)=(1,1,1,1)
+        _RefractAmount("Reflect Amount",Range(0,1))=1
+        _RefractRatio("Refraction ratio",Range(0.1,1))=0.5
+        _CubeMap ("Refraction CubeMap", Cube) = "_Skybox" {}
     }
     SubShader
     {
         Tags { "LightMode"="ForwardBase" }          
         LOD 100
 
-        Pass
+         Pass
         {
             CGPROGRAM
 // Upgrade NOTE: excluded shader from DX11; has structs without semantics (struct v2f members worldNormal)
@@ -55,30 +54,27 @@ Shader "Test/Reflection"
                 o.worldPos=mul(unity_ObjectToWorld.v.vertex).xyz;
                 o.worldViewDir=UnityWorldSpaceViewDir(o.worldPos);
 
-                o.worldRef1=reflect(-o.worldViewDir,o.worldNormal);
+                o.worldRef1=refract(-normalize(o.worldViewDir),normalize(o.worldNormal),_RefractRatio);
                 TRANSFER_SHADOW(o);
                 return o;
-            }
-
-
+            }   
 
             fixed4 frag (v2f i) : SV_Target
             {               
                 fixed3 worldNormal=normalize(i.worldNormal);
                 fixed3 worldLightDir=normalize(UnityWorldSpaceLightDir(i.worldPos));   
-                fixed3 worldViewDir=normalize(i.worldViewDir);
-                fixed4 texColor=tex2D(_MainTex,i.uv);  
+                fixed3 worldViewDir=normalize(i.worldViewDir);                  
 
                 fixed3 ambient=UNITY_LIGHTMODEL_AMBIENT.xyz*albedo;
 
                 fixed3 diffuse=_LightColor0.rgb*albedo*max(0,dot(worldNormal,worldLightDir));
 
-                fixed3 reflection=texCUBE(_CubeMap,i.worldRef).rgb*_ReflectColor.rgb;
+                fixed3 refraction=texCUBE(_CubeMap,i.worldRef).rgb*_ReflectColor.rgb;
 
                 UNITY_LIGHT_ATTENUATION(atten, i, i.worldPos);     
 
-                fixed3 color=ambient+lerp(diffuse,reflection,_ReflectAmount)*atten;
-                               
+                fixed3 color=ambient+lerp(diffuse,refraction,_RefractAmount)*atten;
+    
                 return fixed4(color,1.0);
             }
             ENDCG
