@@ -12,7 +12,8 @@ public class RenderCubeMap:MonoBehaviour
 
     private void OnEnable()
     {
-        OnWizardCreate();
+        OnWizardCreate();///
+        
     }
 
     void OnWizardCreate()
